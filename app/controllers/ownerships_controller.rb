@@ -10,10 +10,10 @@ class OwnershipsController < ApplicationController
 
     # itemsテーブルに存在しない場合は楽天のデータを登録する。
     if @item.new_record?
-      # TODO 商品情報の取得 RakutenWebService::Ichiba::Item.search を用いてください
-      items = {}
-
-      item                  = items.first
+      response = RakutenWebService::Ichiba::Item.search(
+        item_code: params[:item_code], mageFlag: 1)
+      
+      item                  = response.first
       @item.title           = item['itemName']
       @item.small_image     = item['smallImageUrls'].first['imageUrl']
       @item.medium_image    = item['mediumImageUrls'].first['imageUrl']
@@ -26,6 +26,13 @@ class OwnershipsController < ApplicationController
     # params[:type]の値にHaveボタンが押された時には「Have」,
     # Wantボタンが押された時には「Want」が設定されています。
     
+    if params[:type] == 'Have'
+      current_user.have(@item)
+      @have_item = current_user.ownerships.find_by(user_id: current_user.id, type: 'Have', item_id: @item.id)
+    else
+      current_user.want(@item)
+      @want_item = current_user.ownerships.find_by(user_id: current_user.id, type: 'Have', item_id: @item.id)
+    end
 
   end
 
